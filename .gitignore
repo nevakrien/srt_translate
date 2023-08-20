@@ -1,0 +1,5 @@
+__pycache__/
+data/ 
+.ipynb_checkpoints/ 
+test_garbage/
+*.ipynb
