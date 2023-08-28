@@ -13,7 +13,7 @@ srt_translate is a Python application that uses the Hugging Face Transformers li
 1. Clone the repository:
 
     ```sh
-    git clone https://github.com/yourusername/srt_translate.git
+    git clone https://github.com/nevakrien/srt_translate.git
     cd srt_translate
     ```
 

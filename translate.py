@@ -21,10 +21,11 @@ def translate_text(src_text:str,tgt_text:str,model,tokenizer, src_tok, tgt_tok,m
 	inputs = tokenizer(src_text, return_tensors="pt")
 	tgt_tokens=tokenizer.encode(tgt_text,add_special_tokens=False)
 	#may need to add sep here
-	tgt_tokens=torch.IntTensor([[SEP_TOKEN,tgt_tok]+tgt_tokens])
+	tgt_tokens=torch.LongTensor([[SEP_TOKEN,tgt_tok]+tgt_tokens])
 
 	translation = model.generate(**inputs, decoder_input_ids=tgt_tokens,
-		max_length=max_length,top_k=level,num_beams=level,penalty_alpha=0.4)
+		max_length=max_length,top_p=0.75,temperature=1.4,num_beams=level,penalty_alpha=0.4
+		,length_penalty=0.7,min_new_tokens=3)#,repetition_penalty=1.5,no_repeat_ngram_size=5)
 	
 	translated_text = tokenizer.decode(translation[0][tgt_tokens.shape[1]:], skip_special_tokens=True)
 	return translated_text
@@ -39,8 +40,10 @@ def main():
 	parser.add_argument("--tgt_lang", type=str,required=True, help="Target language code.")
 	
 	parser.add_argument("--history", type=int,default=1, help="number of sentances in the context window")
-	parser.add_argument("--level", type=int,default=1, help="increase this to get better results")
+	parser.add_argument("--level", type=int,default=1, help="depth level of the beam search")
 	parser.add_argument("--max_length", type=int,default=1000, help="max token length of a line")
+
+	parser.add_argument("--print", type=int,default=0, help="if passed as 1 will print to the command line as well")
 	
 
 	args = parser.parse_args()
@@ -62,12 +65,14 @@ def main():
 	for subtitle in tqdm(subtitles):
 		q.append(subtitle.content)
 		src_text='\n'.join(q)
-		tgt_text='\n'.join(outputed)
+		tgt_text=''.join(outputed)
 		subtitle.content = translate_text(src_text,tgt_text
 			,max_length=args.max_length,level=args.level,
 			**model_args)
 
 		outputed.append(subtitle.content)
+		if(args.print):
+			print(subtitle.content+"\n\n")
 
 	print('writing output to file')
 	with open(args.output_srt, "w", encoding="utf-8") as f:
