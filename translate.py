@@ -7,7 +7,7 @@ from collections import deque
 from tqdm import tqdm
 
 model_name = 'facebook/nllb-200-3.3B'
-#SEP_TOKEN=2
+SEP_TOKEN=2
 
 def get_model_args(src_lang,tgt_lang):
 	model = AutoModelForSeq2SeqLM.from_pretrained(model_name)
@@ -21,12 +21,12 @@ def translate_text(src_text:str,tgt_text:str,model,tokenizer, src_tok, tgt_tok,m
 	inputs = tokenizer(src_text, return_tensors="pt")
 	tgt_tokens=tokenizer.encode(tgt_text,add_special_tokens=False)
 	#may need to add sep here
-	tgt_tokens=torch.IntTensor([[tgt_tok]+tgt_tokens])
+	tgt_tokens=torch.IntTensor([[SEP_TOKEN,tgt_tok]+tgt_tokens])
 
 	translation = model.generate(**inputs, decoder_input_ids=tgt_tokens,
 		max_length=max_length,top_k=level,num_beams=level,penalty_alpha=0.4)
 	
-	translated_text = tokenizer.decode(translation[0][:tgt_tokens.shape[1]], skip_special_tokens=True)
+	translated_text = tokenizer.decode(translation[0][tgt_tokens.shape[1]:], skip_special_tokens=True)
 	return translated_text
 
 def main():
